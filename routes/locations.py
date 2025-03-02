@@ -10,21 +10,12 @@ router = APIRouter()
 # 📌 GET /locations - Minden lokáció listázása
 @router.get("/locations", response_model=List[LocationResponse])
 def get_all_locations(db: Session = Depends(get_db)):
-    locations = db.query(Location).all()
-    if not locations:
-        raise HTTPException(status_code=404, detail="Nincs elérhető lokáció.")
-    return locations
+    return db.query(Location).all()
 
 # 📌 POST /locations - Új lokáció hozzáadása
 @router.post("/locations", response_model=LocationResponse)
 def create_location(location: LocationCreate, db: Session = Depends(get_db)):
-    new_location = Location(
-        country_code=location.country_code,
-        city=location.city,
-        address=location.address,
-        latitude=location.latitude,
-        longitude=location.longitude
-    )
+    new_location = Location(**location.dict())
     db.add(new_location)
     db.commit()
     db.refresh(new_location)
