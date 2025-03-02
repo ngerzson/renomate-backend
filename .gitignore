@@ -1,0 +1,10 @@
+# Virtuális környezet és cache fájlok kihagyása
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Konfigurációs fájlok
+.env
+.vscode/
