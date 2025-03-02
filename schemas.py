@@ -1,18 +1,8 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Optional
 from enum import Enum
 
-# Felhasználó bejelentkezéséhez szükséges séma
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-# Token séma az autentikációhoz
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    
-# 🔹 Felhasználó típusa
+# 📌 Felhasználó típusa
 class UserType(str, Enum):
     customer = "customer"
     professional = "professional"
@@ -33,50 +23,99 @@ class UserResponse(BaseModel):
     email: EmailStr
     user_type: UserType
     phone: Optional[str]
+    location_id: Optional[int]
 
     class Config:
         from_attributes = True
 
-# Felhasználó frissítése (UserUpdate) - ezt kell hozzáadni!
-class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
-
-# 📌 3️⃣ Lokáció modellje
-class LocationResponse(BaseModel):
-    id: int
-    country_code: str
-    city: str
-    address: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-
-    class Config:
-        from_attributes = True
-
-# Lokáció létrehozásához szükséges séma
+# 📌 3️⃣ Helyszínek modellje
 class LocationCreate(BaseModel):
-    country_code: str
+    country: str
     city: str
+    postal_code: Optional[str] = None
+    address: Optional[str] = None
+    longitude: Optional[float] = None
+    latitude: Optional[float] = None
 
+class LocationResponse(LocationCreate):
+    id: int
 
-# 📌 4️⃣ Szakember létrehozása (most már több szakmával)
+    class Config:
+        from_attributes = True
+
+# 📌 4️⃣ Szakemberek modellje
 class ProfessionalCreate(BaseModel):
     user_id: int
     experience_years: Optional[int] = None
     bio: Optional[str] = None
-    location_id: Optional[int] = None
-    professions: List[int]  # Szakmák listája (profession_id-k)
 
-# 📌 5️⃣ Szakember válaszmodell
-class ProfessionalResponse(BaseModel):
+class ProfessionalResponse(ProfessionalCreate):
     id: int
-    user_id: int
-    experience_years: Optional[int]
-    bio: Optional[str]
-    location_id: Optional[int]
-    professions: List[int]  # Szakmák listája
+
+    class Config:
+        from_attributes = True
+
+# 📌 5️⃣ Szakmák modellje
+class ProfessionCreate(BaseModel):
+    name: str
+
+class ProfessionResponse(ProfessionCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# 📌 6️⃣ Időpontfoglalások modellje
+class AppointmentStatus(str, Enum):
+    pending = "pending"
+    confirmed = "confirmed"
+    completed = "completed"
+    cancelled = "cancelled"
+
+class AppointmentCreate(BaseModel):
+    customer_id: int
+    professional_id: int
+    appointment_date: str
+    status: Optional[AppointmentStatus] = AppointmentStatus.pending
+
+class AppointmentResponse(AppointmentCreate):
+    id: int
+    created_at: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+# 📌 7️⃣ Kategóriák modellje
+class CategoryCreate(BaseModel):
+    name: str
+
+class CategoryResponse(CategoryCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# 📌 8️⃣ Alkategóriák modellje
+class SubCategoryCreate(BaseModel):
+    name: str
+    category_id: int
+
+class SubCategoryResponse(SubCategoryCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# 📌 9️⃣ Értékelések modellje
+class ReviewCreate(BaseModel):
+    customer_id: int
+    professional_id: int
+    rating: int
+    comment: Optional[str] = None
+
+class ReviewResponse(ReviewCreate):
+    id: int
+    created_at: Optional[str]
 
     class Config:
         from_attributes = True
