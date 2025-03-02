@@ -2,6 +2,16 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from enum import Enum
 
+# Felhasználó bejelentkezéséhez szükséges séma
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+# Token séma az autentikációhoz
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
 # 🔹 Felhasználó típusa
 class UserType(str, Enum):
     customer = "customer"
@@ -27,6 +37,12 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# Felhasználó frissítése (UserUpdate) - ezt kell hozzáadni!
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+
 # 📌 3️⃣ Lokáció modellje
 class LocationResponse(BaseModel):
     id: int
@@ -38,6 +54,12 @@ class LocationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Lokáció létrehozásához szükséges séma
+class LocationCreate(BaseModel):
+    country_code: str
+    city: str
+
 
 # 📌 4️⃣ Szakember létrehozása (most már több szakmával)
 class ProfessionalCreate(BaseModel):

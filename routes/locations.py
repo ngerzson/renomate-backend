@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Location
 from schemas import LocationResponse, LocationCreate
-from typing import List
+from typing import List 
 
 router = APIRouter()
 
