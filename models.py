@@ -14,7 +14,6 @@ class User(Base):
     profile_picture = Column(String(500), nullable=True)
     birth_date = Column(Date, nullable=True)
     phone = Column(String(20), nullable=True)
-    bio = Column(Text, nullable=True)
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
     created_at = Column(TIMESTAMP, nullable=True)
 
@@ -66,3 +65,4 @@ class ProfessionalProfession(Base):
     profession_id = Column(Integer, ForeignKey("professions.id"), nullable=False)
 
     professional = relationship("Professional", back_populates="professions")
+    profession = relationship("Profession")
