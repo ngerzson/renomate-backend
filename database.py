@@ -6,15 +6,18 @@ from dotenv import load_dotenv
 # .env fájl betöltése
 load_dotenv()
 
-# Adatbázis kapcsolat beállítása
+# Ellenőrizzük, hogy a DATABASE_URL megfelelően betöltődött-e
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+if not DATABASE_URL:
+    raise ValueError("🚨 Hiba: A DATABASE_URL nincs beállítva a .env fájlban!")
+
 # Adatbázis motor létrehozása
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Ez a rész hiányozhat!
-Base = declarative_base()  # Ez kell a hibamentes működéshez
+# ORM modellek alapja
+Base = declarative_base()
 
 # Adatbázis kapcsolat létrehozása minden egyes kéréshez
 def get_db():
@@ -23,4 +26,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
