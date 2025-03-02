@@ -11,13 +11,12 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     user_type = Column(Enum("customer", "professional", name="user_type"), nullable=False)
-    profile_picture = Column(String(500), nullable=True)
-    birth_date = Column(Date, nullable=True)
     phone = Column(String(20), nullable=True)
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
     created_at = Column(TIMESTAMP, nullable=True)
 
     location = relationship("Location", back_populates="users")
+    professional_profile = relationship("Professional", back_populates="user", uselist=False)
     reviews = relationship("Review", back_populates="customer")
 
 # 📌 2️⃣ Helyszínek táblája
@@ -44,8 +43,9 @@ class Professional(Base):
     bio = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, nullable=True)
 
-    user = relationship("User", back_populates="professional")
+    user = relationship("User", back_populates="professional_profile")
     professions = relationship("ProfessionalProfession", back_populates="professional")
+    reviews = relationship("Review", back_populates="professional")
 
 # 📌 4️⃣ Szakmák táblája
 class Profession(Base):
@@ -109,4 +109,4 @@ class Review(Base):
     created_at = Column(TIMESTAMP, nullable=True)
 
     customer = relationship("User", foreign_keys=[customer_id], back_populates="reviews")
-    professional = relationship("Professional", foreign_keys=[professional_id])
+    professional = relationship("Professional", foreign_keys=[professional_id], back_populates="reviews")
