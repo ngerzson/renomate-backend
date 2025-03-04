@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Date, DECIMAL, Text, Enum, TIMESTAMP
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import text
 from database import Base
 
-# 📌 1️⃣ Felhasználók táblája
 class User(Base):
     __tablename__ = "users"
 
@@ -11,13 +11,17 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     user_type = Column(Enum("customer", "professional", name="user_type"), nullable=False)
+    profile_picture = Column(String(500), nullable=True)  # 📌 Hozzáadva az adatbázis alapján
+    birth_date = Column(Date, nullable=True)  # 📌 Hozzáadva az adatbázis alapján
     phone = Column(String(20), nullable=True)
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=True, server_default=text("CURRENT_TIMESTAMP"))  # 📌 Alapértelmezett érték beállítva
 
+    # 📌 Kapcsolatok más táblákkal
     location = relationship("Location", back_populates="users")
     professional_profile = relationship("Professional", back_populates="user", uselist=False)
     reviews = relationship("Review", back_populates="customer")
+
 
 # 📌 2️⃣ Helyszínek táblája
 class Location(Base):
