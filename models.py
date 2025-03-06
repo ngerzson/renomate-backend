@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 from database import Base
 
+# Felhasználók táblája
 class User(Base):
     __tablename__ = "users"
 
@@ -21,9 +22,10 @@ class User(Base):
     location = relationship("Location", back_populates="users")
     professional_profile = relationship("Professional", back_populates="user", uselist=False)
     reviews = relationship("Review", back_populates="customer")
+    appointments = relationship("Appointment", back_populates="customer")  # 📌 ÚJ kapcsolat
 
 
-# 📌 2️⃣ Helyszínek táblája
+# Helyszínek táblája
 class Location(Base):
     __tablename__ = "locations"
 
@@ -37,43 +39,78 @@ class Location(Base):
 
     users = relationship("User", back_populates="location")
 
-# 📌 32️⃣ Szakemberek táblája
+
+# Szakemberek táblája
 class Professional(Base):
     __tablename__ = "professionals"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     experience_years = Column(Integer, nullable=True)
     bio = Column(Text, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=True, server_default=text("CURRENT_TIMESTAMP"))
 
+    # 📌 ORM kapcsolatok
     user = relationship("User", back_populates="professional_profile")
+    appointments = relationship("Appointment", back_populates="professional")
     reviews = relationship("Review", back_populates="professional")
 
-    # 🔹 Új kapcsolat a szakmákhoz (Many-to-Many)
-    professions = relationship("ProfessionalProfession", back_populates="professional", cascade="all, delete-orphan")
+    # 🔹 Helyes kapcsolat a szakmákhoz (Many-to-Many)
+    professions = relationship(
+        "Profession",
+        secondary="professional_professions",
+        back_populates="professionals"
+    )
 
 
+# Szakmák táblája
 class Profession(Base):
     __tablename__ = "professions"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, unique=True)
 
-    # 🔹 Új kapcsolat a szakemberekhez (Many-to-Many)
-    professionals = relationship("ProfessionalProfession", back_populates="profession", cascade="all, delete-orphan")
+    # 🔹 Helyes kapcsolat a szakemberekhez (Many-to-Many)
+    professionals = relationship(
+        "Professional",
+        secondary="professional_professions",
+        back_populates="professions"
+    )
 
-# 📌 4️⃣ Kapcsolótábla: Szakemberek és szakmák összekapcsolása
+
+# Kapcsolótábla: Szakemberek és szakmák összekapcsolása
 class ProfessionalProfession(Base):
     __tablename__ = "professional_professions"
 
     professional_id = Column(Integer, ForeignKey("professionals.id", ondelete="CASCADE"), primary_key=True)
     profession_id = Column(Integer, ForeignKey("professions.id", ondelete="CASCADE"), primary_key=True)
 
-    professional = relationship("Professional", back_populates="professions")
-    profession = relationship("Profession", back_populates="professionals")
+    professional = relationship("Professional", back_populates="professions")  # 📌 Visszakapcsolás a szakemberekhez
+    profession = relationship("Profession", back_populates="professionals")  # 📌 Visszakapcsolás a szakmákhoz
 
-# 📌 6️⃣ Időpontfoglalások táblája (Appointments)
+
+# Kategóriák táblája
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False, unique=True)
+
+    subcategories = relationship("SubCategory", back_populates="category")
+
+
+#  Alkategóriák táblája
+class SubCategory(Base):
+    __tablename__ = "subcategories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    name = Column(String(255), nullable=False, unique=True)
+
+    category = relationship("Category", back_populates="subcategories")
+
+
+# Időpontfoglalások táblája (Appointments)
 class Appointment(Base):
     __tablename__ = "appointments"
 
@@ -84,29 +121,11 @@ class Appointment(Base):
     status = Column(Enum("pending", "confirmed", "completed", "cancelled", name="appointment_status"), default="pending", nullable=False)
     created_at = Column(TIMESTAMP, nullable=True)
 
-    customer = relationship("User", foreign_keys=[customer_id])
-    professional = relationship("Professional", foreign_keys=[professional_id])
+    customer = relationship("User", back_populates="appointments")  # 📌 ÚJ kapcsolat
+    professional = relationship("Professional", back_populates="appointments")  # 📌 ÚJ kapcsolat
 
-# 📌 7️⃣ Kategóriák táblája
-class Category(Base):
-    __tablename__ = "categories"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False, unique=True)
-
-    subcategories = relationship("SubCategory", back_populates="category")
-
-# 📌 8️⃣ Alkategóriák táblája
-class SubCategory(Base):
-    __tablename__ = "subcategories"
-
-    id = Column(Integer, primary_key=True, index=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    name = Column(String(255), nullable=False, unique=True)
-
-    category = relationship("Category", back_populates="subcategories")
-
-# 📌 9️⃣ Értékelések táblája (Reviews)
+# Értékelések táblája (Reviews)
 class Review(Base):
     __tablename__ = "reviews"
 

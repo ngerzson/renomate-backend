@@ -2,12 +2,12 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from enum import Enum
 
-# 📌 Felhasználó típusa
+# 📌 Felhasználói típusa
 class UserType(str, Enum):
     customer = "customer"
     professional = "professional"
 
-# 📌 1️⃣ Felhasználó létrehozása
+# 📌 1️⃣ Felhasználó létrehozása (API bemenet)
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
@@ -15,8 +15,10 @@ class UserCreate(BaseModel):
     user_type: UserType
     phone: Optional[str] = None
     location_id: Optional[int] = None
+    profile_picture: Optional[str] = None  # 📌 Hozzáadva
+    birth_date: Optional[str] = None  # 📌 Hozzáadva (ISO formátumban)
 
-# 📌 2️⃣ Felhasználói válaszmodell
+# 📌 2️⃣ Felhasználói válaszmodell (API válasz)
 class UserResponse(BaseModel):
     id: int
     name: str
@@ -24,10 +26,12 @@ class UserResponse(BaseModel):
     user_type: UserType
     phone: Optional[str]
     location_id: Optional[int]
+    profile_picture: Optional[str] = None  # 📌 Hozzáadva
+    birth_date: Optional[str] = None  # 📌 Hozzáadva
 
     class Config:
         from_attributes = True
-
+        
 # 📌 3️⃣ Helyszínek modellje
 class LocationCreate(BaseModel):
     country: str
