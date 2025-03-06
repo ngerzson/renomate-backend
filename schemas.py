@@ -1,13 +1,15 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
-from enum import Enum
+from typing import Optional, List
+from enum import Enum, IntEnum
+from datetime import date, datetime
 
-# 📌 Felhasználói típusa
+
+# 📌 1️⃣ Felhasználói típusa
 class UserType(str, Enum):
     customer = "customer"
     professional = "professional"
 
-# 📌 1️⃣ Felhasználó létrehozása (API bemenet)
+# 📌 2️⃣ Felhasználó létrehozása (API bemenet)
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
@@ -15,10 +17,10 @@ class UserCreate(BaseModel):
     user_type: UserType
     phone: Optional[str] = None
     location_id: Optional[int] = None
-    profile_picture: Optional[str] = None  # 📌 Hozzáadva
-    birth_date: Optional[str] = None  # 📌 Hozzáadva (ISO formátumban)
+    profile_picture: Optional[str] = None
+    birth_date: Optional[str] = None
 
-# 📌 2️⃣ Felhasználói válaszmodell (API válasz)
+# 📌 3️⃣ Felhasználói válaszmodell (API válasz)
 class UserResponse(BaseModel):
     id: int
     name: str
@@ -26,13 +28,26 @@ class UserResponse(BaseModel):
     user_type: UserType
     phone: Optional[str]
     location_id: Optional[int]
-    profile_picture: Optional[str] = None  # 📌 Hozzáadva
-    birth_date: Optional[str] = None  # 📌 Hozzáadva
+    profile_picture: Optional[str] = None
+    birth_date: Optional[str] = None  # 📌 Most stringként kell visszaadni
+
+    @classmethod
+    def from_orm(cls, user):
+        return cls(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            user_type=user.user_type,
+            phone=user.phone,
+            location_id=user.location_id,
+            profile_picture=user.profile_picture,
+            birth_date=user.birth_date.strftime("%Y-%m-%d") if user.birth_date else None  # 📌 Dátum konvertálása
+        )
 
     class Config:
         from_attributes = True
-        
-# 📌 3️⃣ Helyszínek modellje
+
+# 📌 4️⃣ Helyszínek modellje
 class LocationCreate(BaseModel):
     country: str
     city: str
@@ -47,19 +62,21 @@ class LocationResponse(LocationCreate):
     class Config:
         from_attributes = True
 
-# 📌 4️⃣ Szakemberek modellje
+# 📌 5️⃣ Szakemberek modellje
 class ProfessionalCreate(BaseModel):
     user_id: int
     experience_years: Optional[int] = None
     bio: Optional[str] = None
+    profession_ids: List[int] = []  # 📌 Hozzáadtam, hogy a szakemberekhez szakmákat is lehessen rendelni
 
 class ProfessionalResponse(ProfessionalCreate):
     id: int
+    professions: List[str]  # 📌 Válaszban a szakmák nevei listában érkeznek
 
     class Config:
         from_attributes = True
 
-# 📌 5️⃣ Szakmák modellje
+# 📌 6️⃣ Szakmák modellje
 class ProfessionCreate(BaseModel):
     name: str
 
@@ -69,7 +86,16 @@ class ProfessionResponse(ProfessionCreate):
     class Config:
         from_attributes = True
 
-# 📌 6️⃣ Időpontfoglalások modellje
+# 📌 7️⃣ Szakember és szakma kapcsolat modellje
+class ProfessionalProfessionCreate(BaseModel):
+    professional_id: int
+    profession_id: int
+
+class ProfessionalProfessionResponse(ProfessionalProfessionCreate):
+    class Config:
+        from_attributes = True
+
+# 📌 8️⃣ Időpontfoglalások modellje
 class AppointmentStatus(str, Enum):
     pending = "pending"
     confirmed = "confirmed"
@@ -89,7 +115,7 @@ class AppointmentResponse(AppointmentCreate):
     class Config:
         from_attributes = True
 
-# 📌 7️⃣ Kategóriák modellje
+# 📌 9️⃣ Kategóriák modellje
 class CategoryCreate(BaseModel):
     name: str
 
@@ -99,7 +125,7 @@ class CategoryResponse(CategoryCreate):
     class Config:
         from_attributes = True
 
-# 📌 8️⃣ Alkategóriák modellje
+# 📌 🔟 Alkategóriák modellje
 class SubCategoryCreate(BaseModel):
     name: str
     category_id: int
@@ -110,7 +136,7 @@ class SubCategoryResponse(SubCategoryCreate):
     class Config:
         from_attributes = True
 
-# 📌 9️⃣ Értékelések modellje
+# 📌 1️⃣1️⃣ Értékelések modellje
 class ReviewCreate(BaseModel):
     customer_id: int
     professional_id: int

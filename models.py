@@ -58,7 +58,7 @@ class Professional(Base):
     # 🔹 Helyes kapcsolat a szakmákhoz (Many-to-Many)
     professions = relationship(
         "Profession",
-        secondary="professional_professions",
+        secondary="professional_professions",  # 📌 Helyesen beállítva a kapcsolótábla
         back_populates="professionals"
     )
 
@@ -78,15 +78,12 @@ class Profession(Base):
     )
 
 
-# Kapcsolótábla: Szakemberek és szakmák összekapcsolása
+# Szakmák és szakemberek kapcsolatát tároló kapcsolótábla
 class ProfessionalProfession(Base):
     __tablename__ = "professional_professions"
 
     professional_id = Column(Integer, ForeignKey("professionals.id", ondelete="CASCADE"), primary_key=True)
     profession_id = Column(Integer, ForeignKey("professions.id", ondelete="CASCADE"), primary_key=True)
-
-    professional = relationship("Professional", back_populates="professions")  # 📌 Visszakapcsolás a szakemberekhez
-    profession = relationship("Profession", back_populates="professionals")  # 📌 Visszakapcsolás a szakmákhoz
 
 
 # Kategóriák táblája
@@ -96,10 +93,10 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, unique=True)
 
-    subcategories = relationship("SubCategory", back_populates="category")
+    subcategories = relationship("SubCategory", back_populates="category")  # 📌 Helyesen definiált kapcsolat
 
 
-#  Alkategóriák táblája
+# Alkategóriák táblája
 class SubCategory(Base):
     __tablename__ = "subcategories"
 
@@ -107,7 +104,8 @@ class SubCategory(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     name = Column(String(255), nullable=False, unique=True)
 
-    category = relationship("Category", back_populates="subcategories")
+    category = relationship("Category", back_populates="subcategories")  # 📌 Most már biztosan létező osztályra hivatkozik
+
 
 
 # Időpontfoglalások táblája (Appointments)
