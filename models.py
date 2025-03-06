@@ -17,7 +17,7 @@ class User(Base):
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
     created_at = Column(TIMESTAMP, nullable=True, server_default=text("CURRENT_TIMESTAMP"))  # 📌 Alapértelmezett érték beállítva
 
-    # 📌 Kapcsolatok más táblákkal
+    # 📌 ORM kapcsolatok
     location = relationship("Location", back_populates="users")
     professional_profile = relationship("Professional", back_populates="user", uselist=False)
     reviews = relationship("Review", back_populates="customer")
@@ -37,7 +37,7 @@ class Location(Base):
 
     users = relationship("User", back_populates="location")
 
-# 📌 3️⃣ Szakemberek táblája
+# 📌 32️⃣ Szakemberek táblája
 class Professional(Base):
     __tablename__ = "professionals"
 
@@ -48,25 +48,30 @@ class Professional(Base):
     created_at = Column(TIMESTAMP, nullable=True)
 
     user = relationship("User", back_populates="professional_profile")
-    professions = relationship("ProfessionalProfession", back_populates="professional")
     reviews = relationship("Review", back_populates="professional")
 
-# 📌 4️⃣ Szakmák táblája
+    # 🔹 Új kapcsolat a szakmákhoz (Many-to-Many)
+    professions = relationship("ProfessionalProfession", back_populates="professional", cascade="all, delete-orphan")
+
+
 class Profession(Base):
     __tablename__ = "professions"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, unique=True)
 
-# 📌 5️⃣ Kapcsolótábla: Szakemberek és szakmák összekapcsolása
+    # 🔹 Új kapcsolat a szakemberekhez (Many-to-Many)
+    professionals = relationship("ProfessionalProfession", back_populates="profession", cascade="all, delete-orphan")
+
+# 📌 4️⃣ Kapcsolótábla: Szakemberek és szakmák összekapcsolása
 class ProfessionalProfession(Base):
     __tablename__ = "professional_professions"
 
-    professional_id = Column(Integer, ForeignKey("professionals.id"), primary_key=True)
-    profession_id = Column(Integer, ForeignKey("professions.id"), primary_key=True)
+    professional_id = Column(Integer, ForeignKey("professionals.id", ondelete="CASCADE"), primary_key=True)
+    profession_id = Column(Integer, ForeignKey("professions.id", ondelete="CASCADE"), primary_key=True)
 
     professional = relationship("Professional", back_populates="professions")
-    profession = relationship("Profession")
+    profession = relationship("Profession", back_populates="professionals")
 
 # 📌 6️⃣ Időpontfoglalások táblája (Appointments)
 class Appointment(Base):
