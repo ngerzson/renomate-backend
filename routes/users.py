@@ -18,7 +18,7 @@ def hash_password(password: str) -> str:
 @router.get("/users", response_model=List[UserResponse])
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
-    return users
+    return [UserResponse.from_orm(user) for user in users]  # 📌 Most minden `birth_date` konvertálva lesz!
 
 # 📌 POST /users - Új felhasználó létrehozása
 @router.post("/users", response_model=UserResponse)

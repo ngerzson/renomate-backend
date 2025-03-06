@@ -29,7 +29,7 @@ class UserResponse(BaseModel):
     phone: Optional[str]
     location_id: Optional[int]
     profile_picture: Optional[str] = None
-    birth_date: Optional[str] = None  # 📌 Most stringként kell visszaadni
+    birth_date: Optional[str] = None  # 📌 Most stringként adjuk vissza
 
     @classmethod
     def from_orm(cls, user):
