@@ -7,10 +7,10 @@ from typing import List
 
 router = APIRouter()
 
-# 📌 GET /professionals - Összes szakember kilistázása
 @router.get("/professionals", response_model=List[ProfessionalResponse])
 def get_all_professionals(db: Session = Depends(get_db)):
-    return db.query(Professional).all()
+    professionals = db.query(Professional).all()
+    return [ProfessionalResponse.from_orm(prof) for prof in professionals]  # 📌 Professzionok string listává alakulnak
 
 # 📌 POST /professionals - Új szakember regisztrálása
 @router.post("/professionals", response_model=ProfessionalResponse)

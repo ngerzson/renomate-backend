@@ -69,9 +69,25 @@ class ProfessionalCreate(BaseModel):
     bio: Optional[str] = None
     profession_ids: List[int] = []  # 📌 Hozzáadtam, hogy a szakemberekhez szakmákat is lehessen rendelni
 
-class ProfessionalResponse(ProfessionalCreate):
+# 📌 Szakemberek válaszmodellje
+class ProfessionalResponse(BaseModel):
     id: int
-    professions: List[str]  # 📌 Válaszban a szakmák nevei listában érkeznek
+    user_id: int
+    experience_years: Optional[int] = None
+    bio: Optional[str] = None
+    created_at: Optional[datetime] = None
+    professions: List[str]  # 📌 Professzionokat most string listaként adjuk vissza
+
+    @classmethod
+    def from_orm(cls, professional):
+        return cls(
+            id=professional.id,
+            user_id=professional.user_id,
+            experience_years=professional.experience_years,
+            bio=professional.bio,
+            created_at=professional.created_at,
+            professions=[p.name for p in professional.professions]  # 📌 Konvertáljuk string listává
+        )
 
     class Config:
         from_attributes = True
