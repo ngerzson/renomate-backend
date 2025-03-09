@@ -56,11 +56,7 @@ class Professional(Base):
     reviews = relationship("Review", back_populates="professional")
 
     # 🔹 Helyes kapcsolat a szakmákhoz (Many-to-Many)
-    professions = relationship(
-        "Profession",
-        secondary="professional_professions",  # 📌 Helyesen beállítva a kapcsolótábla
-        back_populates="professionals"
-    )
+    professions = relationship("Profession", secondary="professional_professions", back_populates="professionals")
 
 
 # Szakmák táblája
@@ -71,11 +67,7 @@ class Profession(Base):
     name = Column(String(255), nullable=False, unique=True)
 
     # 🔹 Helyes kapcsolat a szakemberekhez (Many-to-Many)
-    professionals = relationship(
-        "Professional",
-        secondary="professional_professions",
-        back_populates="professions"
-    )
+    professionals = relationship("Professional",secondary="professional_professions",back_populates="professions")
 
 
 # Szakmák és szakemberek kapcsolatát tároló kapcsolótábla

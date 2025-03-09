@@ -1,15 +1,14 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from enum import Enum, IntEnum
-from datetime import date, datetime
+from enum import Enum
+from datetime import datetime
 
-
-# 📌 1️⃣ Felhasználói típusa
+# 📌 1️⃣ Felhasználói típusok
 class UserType(str, Enum):
     customer = "customer"
     professional = "professional"
 
-# 📌 2️⃣ Felhasználó létrehozása (API bemenet)
+# 📌 2️⃣ Felhasználó létrehozása
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
@@ -18,9 +17,10 @@ class UserCreate(BaseModel):
     phone: Optional[str] = None
     location_id: Optional[int] = None
     profile_picture: Optional[str] = None
-    birth_date: Optional[str] = None
+    birth_date: Optional[str] = None  # 📌 YYYY-MM-DD formátumban
+    professions: Optional[List[int]] = []  # 🔹 Szakmák ID listája, ha szakember
 
-# 📌 3️⃣ Felhasználói válaszmodell (API válasz)
+# 📌 3️⃣ Felhasználói válaszmodell
 class UserResponse(BaseModel):
     id: int
     name: str
@@ -47,7 +47,7 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# 📌 4️⃣ Helyszínek modellje
+# 📌 4️⃣ Helyszínek kezelése
 class LocationCreate(BaseModel):
     country: str
     city: str
@@ -62,21 +62,21 @@ class LocationResponse(LocationCreate):
     class Config:
         from_attributes = True
 
-# 📌 5️⃣ Szakemberek modellje
+# 📌 5️⃣ Szakember létrehozása
 class ProfessionalCreate(BaseModel):
     user_id: int
     experience_years: Optional[int] = None
     bio: Optional[str] = None
-    profession_ids: List[int] = []  # 📌 Hozzáadtam, hogy a szakemberekhez szakmákat is lehessen rendelni
+    professions: Optional[List[int]] = []  # 🔹 Szakmák ID listája
 
-# 📌 Szakemberek válaszmodellje
+# 📌 6️⃣ Szakember válaszmodell
 class ProfessionalResponse(BaseModel):
     id: int
     user_id: int
     experience_years: Optional[int] = None
     bio: Optional[str] = None
     created_at: Optional[datetime] = None
-    professions: List[str]  # 📌 Professzionokat most string listaként adjuk vissza
+    professions: List[str]  # 🔹 Professzionokat string listaként adja vissza
 
     @classmethod
     def from_orm(cls, professional):
@@ -86,13 +86,19 @@ class ProfessionalResponse(BaseModel):
             experience_years=professional.experience_years,
             bio=professional.bio,
             created_at=professional.created_at,
-            professions=[p.name for p in professional.professions]  # 📌 Konvertáljuk string listává
+            professions=[p.name for p in professional.professions]  # 🔹 Professzionokat string listává alakítjuk
         )
 
     class Config:
         from_attributes = True
 
-# 📌 6️⃣ Szakmák modellje
+# 📌 7️⃣ Felhasználó szakemberré alakítása
+class ConvertToProfessional(BaseModel):
+    experience_years: Optional[int] = None
+    bio: Optional[str] = None
+    professions: Optional[List[int]] = []  # 🔹 Szakmák ID listája
+
+# 📌 8️⃣ Szakmák kezelése
 class ProfessionCreate(BaseModel):
     name: str
 
@@ -102,16 +108,7 @@ class ProfessionResponse(ProfessionCreate):
     class Config:
         from_attributes = True
 
-# 📌 7️⃣ Szakember és szakma kapcsolat modellje
-class ProfessionalProfessionCreate(BaseModel):
-    professional_id: int
-    profession_id: int
-
-class ProfessionalProfessionResponse(ProfessionalProfessionCreate):
-    class Config:
-        from_attributes = True
-
-# 📌 8️⃣ Időpontfoglalások modellje
+# 📌 9️⃣ Időpontfoglalások
 class AppointmentStatus(str, Enum):
     pending = "pending"
     confirmed = "confirmed"
@@ -121,7 +118,7 @@ class AppointmentStatus(str, Enum):
 class AppointmentCreate(BaseModel):
     customer_id: int
     professional_id: int
-    appointment_date: str
+    appointment_date: str  # 📌 YYYY-MM-DD HH:MM formátumban
     status: Optional[AppointmentStatus] = AppointmentStatus.pending
 
 class AppointmentResponse(AppointmentCreate):
@@ -131,7 +128,7 @@ class AppointmentResponse(AppointmentCreate):
     class Config:
         from_attributes = True
 
-# 📌 9️⃣ Kategóriák modellje
+# 📌 🔟 Kategóriák kezelése
 class CategoryCreate(BaseModel):
     name: str
 
@@ -141,7 +138,7 @@ class CategoryResponse(CategoryCreate):
     class Config:
         from_attributes = True
 
-# 📌 🔟 Alkategóriák modellje
+# 📌 1️⃣1️⃣ Alkategóriák kezelése
 class SubCategoryCreate(BaseModel):
     name: str
     category_id: int
@@ -152,7 +149,7 @@ class SubCategoryResponse(SubCategoryCreate):
     class Config:
         from_attributes = True
 
-# 📌 1️⃣1️⃣ Értékelések modellje
+# 📌 1️⃣2️⃣ Értékelések
 class ReviewCreate(BaseModel):
     customer_id: int
     professional_id: int
