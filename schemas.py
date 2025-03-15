@@ -29,7 +29,7 @@ class UserResponse(BaseModel):
     phone: Optional[str]
     location_id: Optional[int]
     profile_picture: Optional[str] = None
-    birth_date: Optional[str] = None  # 📌 Most stringként adjuk vissza
+    birth_date: Optional[str] = None  # 📌 Stringként kell visszaadni
 
     @classmethod
     def from_orm(cls, user):
@@ -41,7 +41,7 @@ class UserResponse(BaseModel):
             phone=user.phone,
             location_id=user.location_id,
             profile_picture=user.profile_picture,
-            birth_date=user.birth_date.strftime("%Y-%m-%d") if user.birth_date else None  # 📌 Dátum konvertálása
+            birth_date=user.birth_date.strftime("%Y-%m-%d") if user.birth_date else None  # 🔹 Konvertálás stringgé
         )
 
     class Config:
@@ -69,14 +69,14 @@ class ProfessionalCreate(BaseModel):
     bio: Optional[str] = None
     professions: Optional[List[int]] = []  # 🔹 Szakmák ID listája
 
-# 📌 6️⃣ Szakember válaszmodell
+# 📌 6️⃣ Szakember válaszmodell (Helyesen kezeli a szakmákat!)
 class ProfessionalResponse(BaseModel):
     id: int
     user_id: int
     experience_years: Optional[int] = None
     bio: Optional[str] = None
     created_at: Optional[datetime] = None
-    professions: List[str]  # 🔹 Professzionokat string listaként adja vissza
+    professions: List[str] = []  # 🔹 Professzionokat string listaként adja vissza
 
     @classmethod
     def from_orm(cls, professional):
@@ -86,7 +86,7 @@ class ProfessionalResponse(BaseModel):
             experience_years=professional.experience_years,
             bio=professional.bio,
             created_at=professional.created_at,
-            professions=[p.name for p in professional.professions]  # 🔹 Professzionokat string listává alakítjuk
+            professions=[pp.profession.name for pp in professional.professions]  # 🔹 Professzionokat string listává alakítjuk
         )
 
     class Config:
@@ -162,3 +162,8 @@ class ReviewResponse(ReviewCreate):
 
     class Config:
         from_attributes = True
+
+# 📌 1️⃣3️⃣ Szakemberhez szakmák hozzárendelése
+class ProfessionalProfessionCreate(BaseModel):
+    professional_id: int
+    profession_id: int

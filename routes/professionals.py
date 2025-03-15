@@ -9,7 +9,8 @@ router = APIRouter()
 
 @router.get("/professionals", response_model=List[ProfessionalResponse])
 def get_all_professionals(db: Session = Depends(get_db)):
-    return db.query(Professional).all()
+    professionals = db.query(Professional).all()
+    return [ProfessionalResponse.from_orm(professional) for professional in professionals]
 
 @router.delete("/professionals/{id}", response_model=dict)
 def delete_professional(id: int, db: Session = Depends(get_db)):
