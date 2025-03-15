@@ -86,7 +86,7 @@ class ProfessionalResponse(BaseModel):
             experience_years=professional.experience_years,
             bio=professional.bio,
             created_at=professional.created_at,
-            professions=[pp.profession.name for pp in professional.professions]  # 🔹 Professzionokat string listává alakítjuk
+            professions=[pp.name for pp in professional.professions]  # 🔹 Professzionokat string listává alakítjuk
         )
 
     class Config:
@@ -121,9 +121,24 @@ class AppointmentCreate(BaseModel):
     appointment_date: str  # 📌 YYYY-MM-DD HH:MM formátumban
     status: Optional[AppointmentStatus] = AppointmentStatus.pending
 
-class AppointmentResponse(AppointmentCreate):
+class AppointmentResponse(BaseModel):
     id: int
+    customer_id: int
+    professional_id: int
+    appointment_date: str  # 🔹 Most már mindig stringként adjuk vissza!
+    status: AppointmentStatus
     created_at: Optional[str]
+
+    @classmethod
+    def from_orm(cls, appointment):
+        return cls(
+            id=appointment.id,
+            customer_id=appointment.customer_id,
+            professional_id=appointment.professional_id,
+            appointment_date=appointment.appointment_date.strftime("%Y-%m-%d %H:%M:%S"),  # 🔹 Dátum konvertálása
+            status=appointment.status,
+            created_at=appointment.created_at.strftime("%Y-%m-%d %H:%M:%S") if appointment.created_at else None
+        )
 
     class Config:
         from_attributes = True

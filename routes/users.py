@@ -78,3 +78,24 @@ def convert_to_professional(user_id: int, convert_data: ConvertToProfessional, d
         db.commit()
 
     return UserResponse.from_orm(user)
+
+@router.delete("/users/{user_id}", response_model=dict)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Felhasználó nem található.")
+
+    # Ha a felhasználó szakember, először töröljük őt a professionals táblából és a kapcsolódó szakmákat
+    professional = db.query(Professional).filter(Professional.user_id == user.id).first()
+    
+    if professional:
+        db.query(ProfessionalProfession).filter(ProfessionalProfession.professional_id == professional.id).delete()
+        db.delete(professional)
+        db.commit()
+
+    # Töröljük a felhasználót a `users` táblából
+    db.delete(user)
+    db.commit()
+    
+    return {"message": f"Felhasználó ({user_id}) és minden kapcsolódó adata sikeresen törölve."}
