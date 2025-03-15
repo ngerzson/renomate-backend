@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User
-from schemas import UserCreate, UserResponse
+from models import User, Professional, ProfessionalProfession
+from schemas import UserCreate, UserResponse, ConvertToProfessional
 from passlib.context import CryptContext
 from datetime import datetime
 from typing import List
@@ -10,17 +10,9 @@ from typing import List
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# 📌 Jelszó titkosítása
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-# 📌 GET /users - Minden felhasználó listázása (limit és offset nélkül)
-@router.get("/users", response_model=List[UserResponse])
-def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return [UserResponse.from_orm(user) for user in users]  # 📌 Most minden `birth_date` konvertálva lesz!
-
-# 📌 POST /users - Új felhasználó létrehozása
 @router.post("/users", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == user.email).first():
@@ -47,15 +39,42 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    if user.user_type == "professional":
+        new_professional = Professional(user_id=new_user.id, experience_years=0, bio="")
+        db.add(new_professional)
+        db.commit()
+        db.refresh(new_professional)
+
+        if user.professions:
+            for profession_id in user.professions:
+                db.add(ProfessionalProfession(professional_id=new_professional.id, profession_id=profession_id))
+            db.commit()
+
     return UserResponse.from_orm(new_user)
 
-# 📌 DELETE /users/{user_id} - Felhasználó törlése
-@router.delete("/users/{user_id}", response_model=dict)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+@router.put("/users/{user_id}/convert-to-professional", response_model=UserResponse)
+def convert_to_professional(user_id: int, convert_data: ConvertToProfessional, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
+
     if not user:
         raise HTTPException(status_code=404, detail="Felhasználó nem található.")
+    
+    if user.user_type == "professional":
+        raise HTTPException(status_code=400, detail="A felhasználó már szakember.")
 
-    db.delete(user)
+    user.user_type = "professional"
     db.commit()
-    return {"message": f"Felhasználó ({user_id}) sikeresen törölve."}
+    db.refresh(user)
+
+    new_professional = Professional(user_id=user.id, experience_years=convert_data.experience_years, bio=convert_data.bio)
+    db.add(new_professional)
+    db.commit()
+    db.refresh(new_professional)
+
+    if convert_data.professions:
+        for profession_id in convert_data.professions:
+            db.add(ProfessionalProfession(professional_id=new_professional.id, profession_id=profession_id))
+        db.commit()
+
+    return UserResponse.from_orm(user)

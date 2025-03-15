@@ -6,7 +6,6 @@ from schemas import ProfessionalProfessionCreate
 
 router = APIRouter()
 
-# 📌 POST /professional_professions – Szakemberhez szakmák hozzárendelése
 @router.post("/professional_professions")
 def assign_profession(professional_profession: ProfessionalProfessionCreate, db: Session = Depends(get_db)):
     professional = db.query(Professional).filter(Professional.id == professional_profession.professional_id).first()

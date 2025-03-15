@@ -19,15 +19,10 @@ def create_appointment(appointment: AppointmentCreate, db: Session = Depends(get
     if not professional:
         raise HTTPException(status_code=404, detail="Szakember nem található.")
 
-    try:
-        appointment_date = datetime.strptime(appointment.appointment_date, "%Y-%m-%d %H:%M:%S")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Az időpont formátuma hibás. Használj: YYYY-MM-DD HH:MM:SS")
-
     new_appointment = Appointment(
         customer_id=appointment.customer_id,
         professional_id=appointment.professional_id,
-        appointment_date=appointment_date,
+        appointment_date=datetime.strptime(appointment.appointment_date, "%Y-%m-%d %H:%M:%S"),
         status=appointment.status
     )
 
@@ -36,7 +31,7 @@ def create_appointment(appointment: AppointmentCreate, db: Session = Depends(get
     db.refresh(new_appointment)
     return new_appointment
 
-# 📌 GET /appointments – Ügyfél és szakember időpontjainak lekérdezése
+# 📌 GET /appointments – Összes időpont listázása
 @router.get("/appointments", response_model=List[AppointmentResponse])
 def get_appointments(db: Session = Depends(get_db)):
     return db.query(Appointment).all()
